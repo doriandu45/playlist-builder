@@ -1,0 +1,2 @@
+# Does not include anything by default. You must use .include files to build the playlist. This can be useful to "merge" smaller playlists for example
+ROOT ../Folder 3

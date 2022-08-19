@@ -1,0 +1,6 @@
+# Simple example that creates a playlist with all .mp3 and .flac files found in these two folders (and their subfolders)
+ROOT ../Folder 1
+ROOT /absolute/path/are/not/recomended/but/works/Folder 2
+
+INCLUDE .mp3$
+INCLUDE .flac$

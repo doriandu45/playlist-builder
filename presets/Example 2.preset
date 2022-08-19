@@ -1,0 +1,4 @@
+# This example include all .flac files that don't contain "Instrumental" or "instrumental" in the file name
+ROOT ../Folder 1
+INCLUDE .flac$
+EXCLUDE [Ii]nstrumental
