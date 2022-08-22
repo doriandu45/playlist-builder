@@ -8,7 +8,7 @@ Each playlist have its `.preset` file in the `presets` folder (examples included
 - One or more root path to explore
 - Rules for including or excluding files based on their names (in python `re` regex form)
 
-Additionaly, you can put `.include` and `.exclude` files in the folder that contains the music to force the script to include or exclude specific files
+Additionaly, you can put `[preset name].include` and `[preset name].exclude` files in the folder that contains the music to force the script to include or exclude specific files
 
 The rules are applied in this for each file order:
 1. If the file is in the local `.include` file in its folder, we include it no matter what
@@ -41,12 +41,18 @@ Since, again, we use regexes, we can use the regex `[In]strumental` to match bot
 
 We only set the root folder, but no regexes. By default, nothing will be matched but we can add files by using the `.include` files inside each folder. It's like making small playlists inside each folder, and merging them together (with the right path structure)
 
+### Example 4
+
+Merge Example 2 and 3 together. We could use the `NOWRITE` instruction to only have the result (`Example 4.m3u8`) but not `Example 2.m3u8` for example
+
 ## Commands available inside `.preset` files
 
 `ROOT [path]`: add a root path to recursively search
 `INCLUDE [regex]`: include all filenames that match this regex
 `EXCLUDE [regex]`: exclude all filenames that match this regex
+`IMPORT [preset name]`: insert a "sub-playlist" at the end of the current playlist. You can have multiple stacks of dependencies, but no loops
+`NOWRITE`: do not write a m3u8 playlist at the end, but keep the result in memory. Useful for creating temporary "sub-playlists" that will be merged (and so written) elsewhere.
 
-A preset file must contain at least one `ROOT` command (otherwise nothing will be scanned). Other commands are not mandatory, and can be used multiple times to use multiple regexes.
+A preset file must contain at least one `ROOT` command (otherwise nothing will be scanned) or an `IMPORT` command. Other commands are not mandatory, and can be used multiple times to use multiple regexes.
 
-Futhermore, you can put comments by beginning a line with `#`
+Furthermore, you can put comments by beginning a line with `#`

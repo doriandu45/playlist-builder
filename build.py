@@ -72,48 +72,86 @@ def parse_dir(path, includeReg, excludeReg, preset):
 	
 	return playlist
 
+parsed_presets = dict()
+# Used to detect dependencies loop
+dependencies_stack = []
+
 def parse_preset(preset, name):
 	roots = []
 	excludeReg = []
 	includeReg = []
-	f = open(preset,"r")
-	for line in f.readlines():
-		# Comments support
-		if (line.startswith("#")): continue
-		# Skip empty lines
-		if (len(line.strip()) == 0): continue
-		
-		try:
-			command, arg = line.split(' ', 1)
-			arg = arg.rstrip()
-			if (command == "ROOT"):
-				roots.append(arg)
-			elif (command == "INCLUDE"):
+	dependencies = []
+	write_file = True
+	if (name in dependencies_stack):
+		print ("ERROR: Dependencies loop detected in "+name+"! Aborting")
+		quit()
+	if (name in parsed_presets):
+		return
+	
+	try:
+		with open(preset,"r") as f:
+			for line in f.readlines():
+				# Comments support
+				if (line.startswith("#")): continue
+				# Skip empty lines
+				if (len(line.strip()) == 0): continue
+				if (line.strip == "NOWRITE"):
+					write_file = False
+					continue
+				
 				try:
-					includeReg.append(re.compile(arg))
-				except:
-					print(preset +": Error with regex: " + arg)
-			elif (command == "EXCLUDE"):
-				try:
-					excludeReg.append(re.compile(arg))
-				except:
-					print(preset +": Error with regex: " + arg)
-			else:
-				print(preset +": Unknown command: " + command)
-		except ValueError:
-			print(preset + ": Invalid line (must contain command + arg): " + line)
-	f.close()
+					command, arg = line.split(' ', 1)
+					arg = arg.rstrip()
+					if (command == "ROOT"):
+						roots.append(arg)
+					elif (command == "INCLUDE"):
+						try:
+							includeReg.append(re.compile(arg))
+						except:
+							print(preset +": Error with regex: " + arg)
+					elif (command == "EXCLUDE"):
+						try:
+							excludeReg.append(re.compile(arg))
+						except:
+							print(preset +": Error with regex: " + arg)
+					elif (command == "IMPORT"):
+						dependencies.append(arg)
+					else:
+						print(preset +": Unknown command: " + command)
+				except ValueError:
+					print(preset + ": Invalid line (must contain command + arg): " + line)
+	except:
+		print("Error while opening "+preset+". Skipping")
+		return
 
+	dependencies_stack.append(name)
+	for dep in dependencies:
+		parse_preset("presets/"+dep+".preset", dep)
+	dependencies_stack.remove(name)
 	playlist = []
 
 	for root in roots:
 		playlist += parse_dir(root, includeReg, excludeReg, name)
 	
-	with open(name + ".m3u8", "w") as f:
-		for line in playlist:
-			print(line, file=f)
-	
-	print("Written: " + name + ".m3u8 ("+str(len(playlist))+ " songs)")
+	parsed_presets[name] = playlist
+	dep_size = 0
+	if write_file:
+		with open(name + ".m3u8", "w") as f:
+			for line in playlist:
+				print(line, file=f)
+			for dep in dependencies:
+				dep_size+=len(dep)
+				for line in parsed_presets[dep]:
+					print(line, file=f)
+	dep_str=""
+	if dep_size == 0:
+		dep_str = "("+str(len(playlist))+ " songs)"
+	else:
+		dep_str = "("+str(len(playlist))+ " songs + "+str(dep_size)+" dependencies)"
+	if write_file:
+		print("Written: " + name + ".m3u8 "+dep_str)
+	else:
+		print("Generated (not written): "+name+ " "+dep_str)
 
 for dirEntry in os.scandir("./presets"):
 	root, ext = os.path.splitext(dirEntry.name)
