@@ -95,7 +95,7 @@ def parse_preset(preset, name):
 				if (line.startswith("#")): continue
 				# Skip empty lines
 				if (len(line.strip()) == 0): continue
-				if (line.strip == "NOWRITE"):
+				if (line.strip() == "NOWRITE"):
 					write_file = False
 					continue
 				
