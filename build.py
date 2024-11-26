@@ -5,17 +5,27 @@ import re
 
 debug = False
 
-def parse_dir(path, includeReg, excludeReg, preset):
-	localInclude = []
-	localExclude = []
+def filter_childrens(inputList, path):
+	returnList = []
+	pathHead = os.path.split(path)[1]
+	for path in inputList:
+		child = os.path.relpath(path, pathHead)
+		if not (child.startswith("..")):
+			returnList += [child]
+	return returnList
+
+def parse_dir(path, includeReg, excludeReg, preset, parentIncludes = [], parentExcludes = []):
+	if (debug): print("Parsing path "+path)
+	localInclude = filter_childrens(parentIncludes, path)
+	localExclude = filter_childrens(parentExcludes, path)
 	try:
 		with open(os.path.join(path, preset + ".include")) as f:
-			localInclude = [line.rstrip() for line in f.readlines()]
+			localInclude += [line.rstrip() for line in f.readlines()]
 	except:
 		pass
 	try:
 		with open(os.path.join(path, preset + ".exclude")) as f:
-			localExclude = [line.rstrip() for line in f.readlines()]
+			localExclude += [line.rstrip() for line in f.readlines()]
 	except:
 		pass
 	
@@ -23,7 +33,7 @@ def parse_dir(path, includeReg, excludeReg, preset):
 	
 	for dirEntry in os.scandir(path):
 		if (dirEntry.is_dir()):
-			playlist += parse_dir(os.path.join(path,dirEntry.name), includeReg, excludeReg, preset)
+			playlist += parse_dir(os.path.join(path,dirEntry.name), includeReg, excludeReg, preset, localInclude, localExclude)
 		else:
 			include = False
 			exclude = False
