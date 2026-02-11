@@ -31,7 +31,7 @@ def parse_dir(path, includeReg, excludeReg, preset, parentIncludes = [], parentE
 	
 	playlist = []
 	
-	for dirEntry in os.scandir(path):
+	for dirEntry in sorted(sorted(os.scandir(path), key=lambda e: e.name.casefold()), key=lambda e: e.is_dir()):
 		if (dirEntry.is_dir()):
 			playlist += parse_dir(os.path.join(path,dirEntry.name), includeReg, excludeReg, preset, localInclude, localExclude)
 		else:
